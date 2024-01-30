@@ -1,8 +1,8 @@
-'use client';
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+"use client";
+import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface Pokemon {
   name: string;
@@ -16,29 +16,38 @@ interface PokeApi {
   results: Pokemon[];
 }
 
-async function fetchPokemons(url: string): Promise<PokeApi> {
+async function fetchPokemons(url: string): Promise<PokeApi | null> {
   const response = await fetch(url);
-  return response.json();
+
+  if (response.ok) {
+    return response.json();
+  } else {
+    return null;
+  }
 }
 
 export default function Home() {
   const [pokeApi, setPokeApi] = useState<PokeApi | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const router = useRouter();
 
-  const handleSearchClick = async () => {
+  const handleSearchClick = async (e: FormEvent) => {
+    e.preventDefault();
     const pokemons = await fetchPokemons(
-      'https://pokeapi.co/api/v2/pokemon/' + searchTerm.toLowerCase(),
+      "https://pokeapi.co/api/v2/pokemon/" + searchTerm.toLowerCase()
     );
 
-    if (pokemons && searchTerm.trim())
+    if (pokemons && searchTerm.trim()) {
       router.push(`/pokemon/${searchTerm.toLowerCase()}`);
+    } else {
+      alert("Pokemon não encontrado.");
+    }
   };
 
   useEffect(() => {
     const fetchData = async () => {
       const initialData = await fetchPokemons(
-        'https://pokeapi.co/api/v2/pokemon',
+        "https://pokeapi.co/api/v2/pokemon"
       );
       setPokeApi(initialData);
     };
@@ -60,7 +69,7 @@ export default function Home() {
           Pokemons
         </h1>
 
-        <div className="mb-4 flex justify-center">
+        <form className="mb-4 flex justify-center" onSubmit={handleSearchClick}>
           <input
             type="text"
             placeholder="Pesquisar Pokémon"
@@ -70,15 +79,15 @@ export default function Home() {
           />
           <button
             className="p-2 ml-2 bg-red-700 text-white font-bold rounded-md"
-            onClick={handleSearchClick}
+            type="submit"
           >
             Buscar
           </button>
-        </div>
+        </form>
 
         <div className="flex flex-wrap justify-center">
           {pokeApi?.results.map((pokemon) => {
-            const id = pokemon.url.slice(34).replace('/', '');
+            const id = pokemon.url.slice(34).replace("/", "");
 
             return (
               <Link key={pokemon.name} href={`/pokemon/${pokemon.name}`}>
@@ -92,7 +101,7 @@ export default function Home() {
                       className="rounded-md"
                     />
                   </div>
-                  <h3 className="text-xl font-semibold text-center uppercase">
+                  <h3 className="text-xl font-semibold text-center capitalize">
                     {pokemon.name}
                   </h3>
                 </div>
